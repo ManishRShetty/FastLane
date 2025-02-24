@@ -9,7 +9,7 @@ def change_light(active_color):
     canvas.itemconfig(yellow_light, fill=yellow)
     canvas.itemconfig(green_light, fill=green)
     window.update()
- #Niksith Gay
+ 
 window = tk.Tk()
 window.title("Traffic Light Simulator")
 
