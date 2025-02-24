@@ -43,28 +43,42 @@ async function getRoute(start, end) {
         const route = data.features[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
         routeLine = L.polyline(route, { color: 'blue' }).addTo(map);
 
-        // Update each traffic light based on the closest distance along the route:
-        trafficLights.forEach((light, index) => {
-            let minDistance = Infinity;
-            route.forEach(point => {
-                const distance = getDistance(point, light.coord);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                }
-            });
-            if (minDistance <= 300) {
-                light.isGreen = true;
-                light.marker.setIcon(L.divIcon({ className: 'traffic-light-green', html: '🟢' }));
-                console.log(`Traffic Light ${index + 1} turned GREEN!`);
+        // Monitor ambulance position and update traffic lights dynamically
+        let currentIndex = 0;
+        const interval = setInterval(() => {
+            if (currentIndex < route.length) {
+                const currentPos = route[currentIndex];
+                updateTrafficLights(currentPos);
+                currentIndex++;
             } else {
-                light.isGreen = false;
-                light.marker.setIcon(L.divIcon({ className: 'traffic-light-red', html: '🔴' }));
-                console.log(`Traffic Light ${index + 1} is RED!`);
+                clearInterval(interval);
             }
-        });
+        }, 2000); // Check every second
+
     } else {
         alert("No route found. Check coordinates or API key!");
     }
+}
+
+// Function to update traffic lights based on ambulance position
+function updateTrafficLights(ambulancePos) {
+    trafficLights.forEach((light, index) => {
+        const distance = getDistance(ambulancePos, light.coord);
+
+        if (distance <= 1000) {
+            if (!light.isGreen) {
+                light.isGreen = true;
+                light.marker.setIcon(L.divIcon({ className: 'traffic-light-green', html: '🟢' }));
+                console.log(`Traffic Light ${index + 1} turned GREEN!`, distance);
+            }
+        } else {
+            if (light.isGreen) {
+                light.isGreen = false;
+                light.marker.setIcon(L.divIcon({ className: 'traffic-light-red', html: '🔴' }));
+                console.log(`Traffic Light ${index + 1} is RED!`, distance);
+            }
+        }
+    });
 }
 
 // Fixed End Point
